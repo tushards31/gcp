@@ -23,7 +23,6 @@ BOLD=`tput bold`
 RESET=`tput sgr0`
 #----------------------------------------------------start--------------------------------------------------#
 
-echo "${BG_MAGENTA}${BOLD}Starting Execution${RESET}"
 
 export ZONE=$(gcloud compute project-info describe \
 --format="value(commonInstanceMetadata.items[google-compute-default-zone])")
@@ -97,8 +96,6 @@ EOF_END
 
 terraform init
 
-echo "${RED}${BOLD}Task 1. ${RESET}""${WHITE}${BOLD}Create the configuration files${RESET}" "${GREEN}${BOLD}Completed${RESET}"
-
 cat > modules/instances/instances.tf <<EOF_END
 resource "google_compute_instance" "tf-instance-1" {
   name         = "tf-instance-1"
@@ -149,7 +146,6 @@ terraform plan
 
 terraform apply -auto-approve
 
-echo "${RED}${BOLD}Task 2. ${RESET}""${WHITE}${BOLD}Import infrastructure${RESET}" "${GREEN}${BOLD}Completed${RESET}"
 
 cat > modules/storage/storage.tf <<EOF_END
 resource "google_storage_bucket" "storage-bucket" {
@@ -200,8 +196,6 @@ module "storage" {
 EOF_END
 
 terraform init
-
-echo "${RED}${BOLD}Task 3. ${RESET}""${WHITE}${BOLD}Configure a remote backend${RESET}" "${GREEN}${BOLD}Completed${RESET}"
 
 cat > modules/instances/instances.tf <<EOF_END
 resource "google_compute_instance" "tf-instance-1" {
@@ -269,7 +263,6 @@ terraform init
 
 terraform apply -auto-approve
 
-echo "${RED}${BOLD}Task 4. ${RESET}""${WHITE}${BOLD}Modify and update infrastructure${RESET}" "${GREEN}${BOLD}Completed${RESET}"
 
 terraform taint module.instances.google_compute_instance.$INSTANCE
 
@@ -322,8 +315,6 @@ resource "google_compute_instance" "tf-instance-2" {
 EOF_END
 
 terraform apply -auto-approve
-
-echo "${RED}${BOLD}Task 5. ${RESET}""${WHITE}${BOLD}Destroy resources${RESET}" "${GREEN}${BOLD}Completed${RESET}"
 
 cat >> main.tf <<EOF_END
 module "vpc" {
@@ -408,8 +399,6 @@ terraform plan
 
 terraform apply -auto-approve
 
-echo "${RED}${BOLD}Task 6. ${RESET}""${WHITE}${BOLD}Use a module from the Registry${RESET}" "${GREEN}${BOLD}Completed${RESET}"
-
 cat >> main.tf <<EOF_END
 resource "google_compute_firewall" "tf-firewall"{
   name    = "tf-firewall"
@@ -431,6 +420,5 @@ terraform plan
 
 terraform apply -auto-approve
 
-echo "${RED}${BOLD}Task 6. ${RESET}""${WHITE}${BOLD}Configure a firewall${RESET}" "${GREEN}${BOLD}Completed${RESET}"
 
 #-----------------------------------------------------end----------------------------------------------------------#
