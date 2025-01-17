@@ -85,8 +85,7 @@ for cluster in "${CLUSTERS[@]}"; do
   
   while [ "$status" != "RUNNING" ]; do
     echo "Waiting for $cluster to be RUNNING..."
-    echo "Like Share and Subscribe to QUICKLAB [https://www.youtube.com/@quick_lab]..."
-
+    
     sleep 10  # Adjust the sleep duration as needed
     status=$(gcloud container clusters describe "$cluster" --format="value(status)")
   done
