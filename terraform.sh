@@ -6,6 +6,10 @@
 
 #----------------------------------------------------start--------------------------------------------------#
 
+read -p "Enter BUCKET: " BUCKET
+read -p "Enter INSTANCE: " INSTANCE
+read -p "Enter VPC: " VPC
+
 
 export ZONE=$(gcloud compute project-info describe \
 --format="value(commonInstanceMetadata.items[google-compute-default-zone])")
