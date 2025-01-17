@@ -1,34 +1,31 @@
 #!/bin/bash
 
-#export BUCKET=
-#export INSTANCE=
-#export VPC=
-
-#----------------------------------------------------start--------------------------------------------------#
-
+# Prompt user for input values for bucket, instance, and VPC
 read -p "Enter BUCKET: " BUCKET
 read -p "Enter INSTANCE: " INSTANCE
 read -p "Enter VPC: " VPC
 
-
+# Get the default zone from the Google Cloud project's metadata
 export ZONE=$(gcloud compute project-info describe \
 --format="value(commonInstanceMetadata.items[google-compute-default-zone])")
 
+# Extract the region from the zone by removing the last part
 export REGION=$(echo "$ZONE" | cut -d '-' -f 1-2)
 
+# Set the project ID from the Google Cloud Shell environment variable
 export PROJECT_ID=$DEVSHELL_PROJECT_ID
 
+# List all compute instance IDs in the project and store them
 instances_output=$(gcloud compute instances list --format="value(id)")
 
 # Read instance IDs into variables
 IFS=$'\n' read -r -d '' instance_id_1 instance_id_2 <<< "$instances_output"
 
-# Output instance IDs with custom name
-
+# Export the instance IDs for later use
 export INSTANCE_ID_1=$instance_id_1
-
 export INSTANCE_ID_2=$instance_id_2
 
+# Create necessary files and directory structure for Terraform project
 touch main.tf
 touch variables.tf
 mkdir modules
@@ -46,6 +43,7 @@ touch outputs.tf
 touch variables.tf
 cd
 
+# Define Terraform variables for the project
 cat > variables.tf <<EOF_END
 variable "region" {
  default = "$REGION"
@@ -60,6 +58,7 @@ variable "project_id" {
 }
 EOF_END
 
+# Define main Terraform configuration
 cat > main.tf <<EOF_END
 terraform {
   required_providers {
@@ -81,8 +80,10 @@ module "instances" {
 }
 EOF_END
 
+# Initialize Terraform
 terraform init
 
+# Create Terraform configuration for instances module
 cat > modules/instances/instances.tf <<EOF_END
 resource "google_compute_instance" "tf-instance-1" {
   name         = "tf-instance-1"
@@ -125,15 +126,15 @@ resource "google_compute_instance" "tf-instance-2" {
 }
 EOF_END
 
+# Import existing instances into Terraform state
 terraform import module.instances.google_compute_instance.tf-instance-1 $INSTANCE_ID_1
-
 terraform import module.instances.google_compute_instance.tf-instance-2 $INSTANCE_ID_2
 
+# Plan and apply changes to the infrastructure
 terraform plan
-
 terraform apply -auto-approve
 
-
+# Add configuration for a Google Cloud Storage bucket
 cat > modules/storage/storage.tf <<EOF_END
 resource "google_storage_bucket" "storage-bucket" {
   name          = "$BUCKET"
@@ -143,16 +144,18 @@ resource "google_storage_bucket" "storage-bucket" {
 }
 EOF_END
 
+# Update the main configuration to include the storage module
 cat >> main.tf <<EOF_END
 module "storage" {
   source     = "./modules/storage"
 }
 EOF_END
 
+# Reinitialize Terraform and apply the new configuration
 terraform init
-
 terraform apply -auto-approve
 
+# Enable remote state storage using the created bucket
 cat > main.tf <<EOF_END
 terraform {
 	backend "gcs" {
@@ -182,8 +185,10 @@ module "storage" {
 }
 EOF_END
 
+# Reinitialize Terraform with the new backend
 terraform init
 
+# Update instance configurations for scaling and customization
 cat > modules/instances/instances.tf <<EOF_END
 resource "google_compute_instance" "tf-instance-1" {
   name         = "tf-instance-1"
@@ -246,63 +251,17 @@ resource "google_compute_instance" "$INSTANCE" {
 }
 EOF_END
 
+# Reinitialize and apply updated configurations
 terraform init
-
 terraform apply -auto-approve
 
-
+# Force a recreation of the specified instance
 terraform taint module.instances.google_compute_instance.$INSTANCE
-
 terraform init
-
 terraform plan
-
 terraform apply -auto-approve
 
-cat > modules/instances/instances.tf <<EOF_END
-resource "google_compute_instance" "tf-instance-1" {
-  name         = "tf-instance-1"
-  machine_type = "e2-standard-2"
-  zone         = "$ZONE"
-
-  boot_disk {
-    initialize_params {
-      image = "debian-cloud/debian-11"
-    }
-  }
-
-  network_interface {
- network = "default"
-  }
-  metadata_startup_script = <<-EOT
-        #!/bin/bash
-    EOT
-  allow_stopping_for_update = true
-}
-
-resource "google_compute_instance" "tf-instance-2" {
-  name         = "tf-instance-2"
-  machine_type = "e2-standard-2"
-  zone         =  "$ZONE"
-
-  boot_disk {
-    initialize_params {
-      image = "debian-cloud/debian-11"
-    }
-  }
-
-  network_interface {
-	  network = "default"
-  }
-  metadata_startup_script = <<-EOT
-        #!/bin/bash
-    EOT
-  allow_stopping_for_update = true
-}
-EOF_END
-
-terraform apply -auto-approve
-
+# Add VPC and subnet configurations
 cat >> main.tf <<EOF_END
 module "vpc" {
     source  = "terraform-google-modules/network/google"
@@ -330,12 +289,12 @@ module "vpc" {
 }
 EOF_END
 
+# Reinitialize and apply updated configurations for VPC
 terraform init
-
 terraform plan
-
 terraform apply -auto-approve
 
+# Update instance networking configurations to use VPC subnets
 cat > modules/instances/instances.tf <<EOF_END
 resource "google_compute_instance" "tf-instance-1" {
   name         = "tf-instance-1"
@@ -380,12 +339,12 @@ resource "google_compute_instance" "tf-instance-2" {
 }
 EOF_END
 
+# Apply the changes for updated instances
 terraform init
-
 terraform plan
-
 terraform apply -auto-approve
 
+# Add a firewall rule for allowing HTTP traffic
 cat >> main.tf <<EOF_END
 resource "google_compute_firewall" "tf-firewall"{
   name    = "tf-firewall"
@@ -401,11 +360,7 @@ resource "google_compute_firewall" "tf-firewall"{
 }
 EOF_END
 
+# Reinitialize and apply the firewall configuration
 terraform init
-
 terraform plan
-
 terraform apply -auto-approve
-
-
-#-----------------------------------------------------end----------------------------------------------------------#
