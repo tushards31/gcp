@@ -145,8 +145,6 @@ while true; do
     break
   fi
   
-  # Wait for a short duration before checking agai
-  echo "it's creating now so kindly wait meanwhile like share and subscribe to quicklab [https://www.youtube.com/@quick_lab]"
 
   sleep 10
 done
