@@ -6,7 +6,10 @@
 #export ZONE=
 
 #----------------------------------------------------start--------------------------------------------------#
-
+read -p "Enter REPO: " REPO
+read -p "Enter DOCKER IMAGE: " DCKR_IMG
+read -p "Enter TAG: " TAG
+read -p "Enter ZONE: " ZONE
 
 export REGION="${ZONE%-*}"
 
