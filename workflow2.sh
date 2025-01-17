@@ -1,7 +1,6 @@
 clear
 
 #!/bin/bash
-# Define color variables
 
 
 # Array of color codes excluding black and white
